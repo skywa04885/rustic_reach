@@ -6,7 +6,6 @@ use memory::{
     led_on_l_addr, MODE1_ADDR, MODE1_ALLCALL_BIT, MODE1_RESTART_BIT, MODE1_SLEEP_BIT,
     PRE_SCALE_ADDR,
 };
-use rppal::i2c::I2c;
 use thiserror::Error;
 use tokio::time::sleep;
 
@@ -14,16 +13,21 @@ pub mod device;
 pub(crate) mod math;
 pub(crate) mod memory;
 
+/// Represents the possible errors that can occur in the PCA9685 driver.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Device error: an error occurred while communicating with the PCA9685 device.
     #[error("Device error: {0}")]
     DeviceError(#[from] device::Error),
+    /// Math error: an error occurred during mathematical calculations.
     #[error("Math error: {0}")]
     MathError(#[from] math::Error),
+    /// Restart error: an error occurred during the restart operation of the PCA9685 device.
     #[error("Restart error")]
     RestartError,
 }
 
+/// Builder for creating a `Driver` instance with custom configuration.
 pub struct DriverBuilder {
     device: Device,
     osc_clock: u32,
@@ -31,14 +35,35 @@ pub struct DriverBuilder {
 }
 
 impl DriverBuilder {
-    pub fn new(ctx: I2c) -> Self {
+    /// Creates a new instance of the `DriverBuilder` struct with default values for the oscillator clock and update rate.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The `Device` instance used for communication with the PCA9685 device.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the `DriverBuilder` struct with default values for the oscillator clock (50,000,000) and update rate (50).
+    pub fn new(device: Device) -> Self {
         Self {
-            device: Device::new(ctx),
+            device,
             osc_clock: 50_000_000_u32,
             update_rate: 50_u16,
         }
     }
 
+    /// Builds the `Driver` instance.
+    ///
+    /// This function finalizes the configuration of the `DriverBuilder` and creates a new
+    /// instance of the `Driver` struct. It performs the following steps:
+    /// 1. Clears the "LED All Calls" bit in the MODE1 register.
+    /// 2. Computes the prescale value based on the oscillator clock and update rate.
+    /// 3. Writes the prescale value to the PRE_SCALE register.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `Driver` instance if the build operation is successful,
+    /// otherwise returns an `Error`.
     pub fn build(mut self) -> Result<Driver, Error> {
         // Do not listen to "LED All Calls".
         self.device.clear_bit_mask(MODE1_ADDR, MODE1_ALLCALL_BIT)?;
@@ -53,7 +78,7 @@ impl DriverBuilder {
         Ok(Driver::new(self.device))
     }
 }
-
+/// Represents a driver for the PCA9685 device.
 pub struct Driver {
     device: Device,
 }
@@ -70,6 +95,19 @@ impl Driver {
     /// A new instance of the `Driver` struct.
     pub fn new(device: Device) -> Self {
         Self { device }
+    }
+
+    /// Creates a new instance of the `DriverBuilder` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The `Device` instance used for communication with the PCA9685 device.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the `DriverBuilder` struct.
+    pub fn builder(device: Device) -> DriverBuilder {
+        DriverBuilder::new(device)
     }
 
     /// Puts the PCA9685 device into sleep mode.
@@ -188,7 +226,7 @@ impl Driver {
     /// # Returns
     ///
     /// Returns `Ok(())` if the write operation is successful, otherwise returns an `Error`.
-    pub fn write_duty_cycle_to_channel(
+    pub fn write_channel_duty_cycle(
         &mut self,
         channel: u8,
         duty_cycle: f64,

@@ -24,8 +24,7 @@ pub enum Error {
 ///
 /// Returns a `Result` containing the prescale value as a `u8` if the computation is successful.
 ///  Otherwise, it returns an `Error` with a custom error message.
-#[allow(unused)]
-pub fn compute_prescale(osc_clock: u32, update_rate: u16) -> Result<u8, Error> {
+pub(crate) fn compute_prescale(osc_clock: u32, update_rate: u16) -> Result<u8, Error> {
     // Compute the prescale value using the formula: (osc_clock / (4096 * update_rate)) - 1.
     let prescale_value = (osc_clock as f64 / (4096_f64 * update_rate as f64)).round() - 1_f64;
 
@@ -48,8 +47,7 @@ pub fn compute_prescale(osc_clock: u32, update_rate: u16) -> Result<u8, Error> {
 /// # Returns
 ///
 /// The on time for the PWM signal, represented as a 16-bit unsigned integer.
-#[allow(unused)]
-pub fn compute_on_off_time(duty_cycle: f64) -> Result<(u16, u16), Error> {
+pub(crate) fn compute_on_off_time(duty_cycle: f64) -> Result<(u16, u16), Error> {
     // Check if the duty cycle is outside the bounds of 0.0 to 1.0.
     if duty_cycle < 0.0 || duty_cycle > 1.0 {
         // Return an error with a custom error message.

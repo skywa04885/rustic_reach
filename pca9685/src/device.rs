@@ -1,8 +1,10 @@
 use rppal::i2c::I2c;
 use thiserror::Error;
 
+/// Represents the possible errors that can occur during I2C communication with the PCA9685 device.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Represents an I2C error.
     #[error("I2C Error: {0}")]
     I2CError(#[from] rppal::i2c::Error),
 }
