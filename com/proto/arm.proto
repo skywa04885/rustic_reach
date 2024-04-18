@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package proto;
+
+message Pose {
+    double theta_0 = 10;
+    double theta_1 = 20;
+    double theta_2 = 30;
+    double theta_3 = 40;
+    double theta_4 = 50;
+}
+
+message Movement {
+    Pose pose = 10;
+    double duration = 20;    
+}
+
+message MoveRequest {
+    Movement movement = 10;
+}
+
+message MoveResponse {
+
+}
+
+message PoseStreamRequest {
+
+}
+
+message PoseStreamResponse {
+    Pose pose = 10;
+}
+
+service ArmService {
+    rpc Move(MoveRequest) returns (MoveResponse);
+
+    rpc PoseStream(PoseStreamRequest) returns (stream PoseStreamResponse);
+}
