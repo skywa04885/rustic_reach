@@ -1,5 +1,6 @@
 use rppal::i2c::I2c;
 use thiserror::Error;
+use tokio::time::sleep;
 
 /// Represents the possible errors that can occur during I2C communication with the PCA9685 device.
 #[derive(Debug, Error)]
@@ -12,6 +13,7 @@ pub enum Error {
 /// Represents a PCA9685 device.
 pub struct Device {
     i2c: I2c,
+    address: u16,
 }
 
 impl Device {
@@ -20,13 +22,14 @@ impl Device {
     /// # Arguments
     ///
     /// * `ctx` - The I2C context to use for communication with the device.
+    /// * `address` - The I2C address of the device.
     ///
     /// # Returns
     ///
     /// Returns a new `Device` instance.
     #[allow(unused)]
-    pub fn new(ctx: I2c) -> Self {
-        Self { i2c: ctx }
+    pub fn new(i2c: I2c, address: u16) -> Self {
+        Self { i2c, address }
     }
 
     /// Reads a single byte from the device at the specified address.
@@ -83,6 +86,34 @@ impl Device {
 
         self.i2c.write(buffer)?;
 
+        Ok(())
+    }
+
+    /// Performs a software reset on the PCA9685 device.
+    ///
+    /// This function sends a reset command to the device, which resets all internal registers and
+    /// settings to their default values. It does not affect the I2C communication settings.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` on success, or an `Error` if the reset operation fails.
+    pub async fn software_reset(&mut self) -> Result<(), Error> {
+        // Create the buffer that will contain the reset command (as described in section "7.6").
+        let buffer = [0x06];
+
+        // Set the slave address to the general call address (as described in section "7.6").
+        self.i2c.set_slave_address(0x00)?;
+
+        // Write the reset command to the device.
+        self.i2c.write(&buffer)?;
+
+        // Set the slave address back to the device address.
+        self.i2c.set_slave_address(self.address)?;
+
+        // Wait for the reset to complete.
+        sleep(std::time::Duration::from_millis(1)).await;
+
+        // Return success.
         Ok(())
     }
 

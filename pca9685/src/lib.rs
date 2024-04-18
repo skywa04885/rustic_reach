@@ -51,6 +51,37 @@ impl DriverBuilder {
             update_rate: 50_u16,
         }
     }
+    /// Sets the oscillator clock value for the `DriverBuilder`.
+    ///
+    /// This function allows you to customize the oscillator clock value used by the `DriverBuilder`.
+    ///
+    /// # Arguments
+    ///
+    /// * `osc_clock` - The oscillator clock value to set.
+    ///
+    /// # Returns
+    ///
+    /// Returns the modified `DriverBuilder` instance.
+    pub fn with_osc_clock(mut self, osc_clock: u32) -> Self {
+        self.osc_clock = osc_clock;
+        self
+    }
+
+    /// Sets the update rate value for the `DriverBuilder`.
+    ///
+    /// This function allows you to customize the update rate value used by the `DriverBuilder`.
+    ///
+    /// # Arguments
+    ///
+    /// * `update_rate` - The update rate value to set.
+    ///
+    /// # Returns
+    ///
+    /// Returns the modified `DriverBuilder` instance.
+    pub fn with_update_rate(mut self, update_rate: u16) -> Self {
+        self.update_rate = update_rate;
+        self
+    }
 
     /// Builds the `Driver` instance.
     ///
