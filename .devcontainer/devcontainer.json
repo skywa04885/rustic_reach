@@ -1,0 +1,4 @@
+{
+    "name": "Rustic Reach Codespace",
+	"dockerFile": "Dockerfile"
+}
