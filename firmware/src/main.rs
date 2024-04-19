@@ -1,5 +1,9 @@
-use pca9685::{device::Device, Driver};
+use std::sync::Arc;
+
+use pca9685::{device::Device, Channel, Driver};
+use pca9685_servo::{Servo, ServoSettings};
 use rppal::i2c::I2c;
+use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() {
@@ -20,6 +24,12 @@ async fn main() {
     // Wake the PCA9685 device from sleep mode.
     driver.wake().await.unwrap();
 
+    // Wrap the driver.
+    let driver = Arc::new(Mutex::new(driver));
+
+    // Create the servo.
+    let servo_settings = ServoSettings::new();
+    let mut servo = Servo::new(Channel::new(driver, 0_u8), servo_settings);
+    servo.write(120.0).await.unwrap();
     
-    driver.write_channel_duty_cycle(1, 0.764).unwrap();
 }

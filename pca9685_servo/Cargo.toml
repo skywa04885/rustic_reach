@@ -1,12 +1,11 @@
 [package]
-name = "firmware"
+name = "pca9685_servo"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rppal = "0.17.1"
 pca9685 = { path = "../pca9685" }
-tokio = { version = "1.37.0", features = ["tokio-macros", "full"] }
-pca9685_servo = { path = "../pca9685_servo" }
+thiserror = "1.0.58"
+tokio = { version = "1.37.0", features = ["full"] }

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use device::Device;
 use math::{compute_on_off_time, compute_prescale};
@@ -7,7 +7,7 @@ use memory::{
     PRE_SCALE_ADDR,
 };
 use thiserror::Error;
-use tokio::time::sleep;
+use tokio::{sync::Mutex, time::sleep};
 
 pub mod device;
 pub(crate) mod math;
@@ -257,11 +257,7 @@ impl Driver {
     /// # Returns
     ///
     /// Returns `Ok(())` if the write operation is successful, otherwise returns an `Error`.
-    pub fn write_channel_duty_cycle(
-        &mut self,
-        channel: u8,
-        duty_cycle: f64,
-    ) -> Result<(), Error> {
+    pub fn write_channel_duty_cycle(&mut self, channel: u8, duty_cycle: f64) -> Result<(), Error> {
         // Compute the on and off values based on the duty cycle.
         let (on, off) = compute_on_off_time(duty_cycle)?;
 
@@ -270,5 +266,60 @@ impl Driver {
 
         // Return success.
         Ok(())
+    }
+}
+
+/// Represents a channel of a PCA9685 driver.
+pub struct Channel {
+    driver: Arc<Mutex<Driver>>,
+    channel: u8,
+}
+
+impl Channel {
+    /// Creates a new `Channel` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `driver` - The driver for the PCA9685.
+    /// * `channel` - The channel number.
+    ///
+    /// # Returns
+    ///
+    /// A new `Channel` instance.
+    pub fn new(driver: Arc<Mutex<Driver>>, channel: u8) -> Self {
+        Self { driver, channel }
+    }
+
+    /// Writes the on and off values to the channel.
+    ///
+    /// # Arguments
+    ///
+    /// * `on` - The on value.
+    /// * `off` - The off value.
+    ///
+    /// # Returns
+    ///
+    /// An `Ok` result if the write operation is successful, otherwise an `Err` containing the error.
+    pub async fn write(&mut self, on: u16, off: u16) -> Result<(), Error> {
+        self.driver
+            .lock()
+            .await
+            .write_channel(self.channel, on, off)
+    }
+
+    /// Writes the duty cycle to the channel.
+    ///
+    /// # Arguments
+    ///
+    /// * `duty_cycle` - The duty cycle value.
+    ///
+    /// # Returns
+    ///
+    /// An `Ok` result if the write operation is successful, otherwise an `Err` containing the error.
+    pub async fn write_duty_cycle(&mut self, duty_cycle: f64) -> Result<(), Error> {
+        self.driver
+            .lock()
+            .await
+            .write_channel_duty_cycle(self.channel, duty_cycle)
     }
 }
