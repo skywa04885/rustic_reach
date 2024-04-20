@@ -30,11 +30,11 @@ impl ServoSettings {
     pub const DEFAULT_START_DUTY_CYCLE: f64 = 0.05_f64;
     pub const DEFAULT_END_DUTY_CYCLE: f64 = 0.1_f64;
 
-    /// Creates a new `Settings` instance with default values.
+    /// Creates a new `ServoSettings` instance with default values.
     ///
     /// # Returns
     ///
-    /// The new `Settings` instance.
+    /// The new `ServoSettings` instance.
     pub fn new() -> Self {
         Self {
             start_angle: Self::DEFAULT_START_ANGLE,
@@ -129,6 +129,17 @@ impl Servo {
             settings,
             angle,
         }
+    }
+
+    pub async fn write_with_duration(&mut self, angle: f64, duration: f64) -> Result<(), Error> {
+        // Compute the speed to make the movement last the gicen duration.
+        let speed = (angle - self.angle).abs() / duration;
+
+        // Write the angle with the computed speed.
+        self.write_with_speed(angle, speed).await?;
+
+        // Return success.
+        Ok(())
     }
 
     /// Writes the servo to a desired angle with a specified speed.

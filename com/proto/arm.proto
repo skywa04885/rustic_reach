@@ -15,11 +15,11 @@ message Movement {
     double duration = 20;    
 }
 
-message MoveRequest {
+message MovePoseRequest {
     Movement movement = 10;
 }
 
-message MoveResponse {
+message MovePoseResponse {
 
 }
 
@@ -32,7 +32,7 @@ message PoseStreamResponse {
 }
 
 service ArmService {
-    rpc Move(MoveRequest) returns (MoveResponse);
+    rpc MovePose(MovePoseRequest) returns (MovePoseResponse);
 
     rpc PoseStream(PoseStreamRequest) returns (stream PoseStreamResponse);
 }

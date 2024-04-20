@@ -23,13 +23,13 @@ pub struct Movement {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MoveRequest {
+pub struct MovePoseRequest {
     #[prost(message, optional, tag = "10")]
     pub movement: ::core::option::Option<Movement>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MoveResponse {}
+pub struct MovePoseResponse {}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PoseStreamRequest {}
@@ -124,10 +124,13 @@ pub mod arm_service_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn r#move(
+        pub async fn move_pose(
             &mut self,
-            request: impl tonic::IntoRequest<super::MoveRequest>,
-        ) -> std::result::Result<tonic::Response<super::MoveResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::MovePoseRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::MovePoseResponse>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -138,9 +141,11 @@ pub mod arm_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/proto.ArmService/Move");
+            let path = http::uri::PathAndQuery::from_static(
+                "/proto.ArmService/MovePose",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("proto.ArmService", "Move"));
+            req.extensions_mut().insert(GrpcMethod::new("proto.ArmService", "MovePose"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn pose_stream(
@@ -177,10 +182,13 @@ pub mod arm_service_server {
     /// Generated trait containing gRPC methods that should be implemented for use with ArmServiceServer.
     #[async_trait]
     pub trait ArmService: Send + Sync + 'static {
-        async fn r#move(
+        async fn move_pose(
             &self,
-            request: tonic::Request<super::MoveRequest>,
-        ) -> std::result::Result<tonic::Response<super::MoveResponse>, tonic::Status>;
+            request: tonic::Request<super::MovePoseRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::MovePoseResponse>,
+            tonic::Status,
+        >;
         /// Server streaming response type for the PoseStream method.
         type PoseStreamStream: tonic::codegen::tokio_stream::Stream<
                 Item = std::result::Result<super::PoseStreamResponse, tonic::Status>,
@@ -271,23 +279,25 @@ pub mod arm_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/proto.ArmService/Move" => {
+                "/proto.ArmService/MovePose" => {
                     #[allow(non_camel_case_types)]
-                    struct MoveSvc<T: ArmService>(pub Arc<T>);
-                    impl<T: ArmService> tonic::server::UnaryService<super::MoveRequest>
-                    for MoveSvc<T> {
-                        type Response = super::MoveResponse;
+                    struct MovePoseSvc<T: ArmService>(pub Arc<T>);
+                    impl<
+                        T: ArmService,
+                    > tonic::server::UnaryService<super::MovePoseRequest>
+                    for MovePoseSvc<T> {
+                        type Response = super::MovePoseResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::MoveRequest>,
+                            request: tonic::Request<super::MovePoseRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as ArmService>::r#move(&inner, request).await
+                                <T as ArmService>::move_pose(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -299,7 +309,7 @@ pub mod arm_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = MoveSvc(inner);
+                        let method = MovePoseSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
