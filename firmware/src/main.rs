@@ -4,7 +4,7 @@ pub(crate) mod pose;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let my_arm_service = MyArmService {};
+    // let my_arm_service = MyArmService {};
 
     Ok(())
     /*

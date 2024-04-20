@@ -13,8 +13,8 @@ pub struct Arm {
 
 impl Arm {
     pub fn write(&mut self, pose: [f64; 5], duration: f64) {
-        for (servo, angle) in self.servos.iter().zip(pose.iter()) {
-            servo.write_with_duration(angle, duration)
+        for (mut servo, angle) in self.servos.iter_mut().zip(pose.iter()) {
+            servo.write_with_duration(*angle, duration);
         }
     }
 }
@@ -23,7 +23,7 @@ pub struct MyArmService {}
 
 impl MyArmService {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
