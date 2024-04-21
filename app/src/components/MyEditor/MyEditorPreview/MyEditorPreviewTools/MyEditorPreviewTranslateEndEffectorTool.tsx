@@ -1,19 +1,23 @@
-import { Line } from "@react-three/drei";
+import { Line, Plane } from "@react-three/drei";
 import React from "react";
 import * as THREE from "three";
 import { Line2 } from "three-stdlib";
 import { useEditorPreviewContext } from "../../MyEditorPreview";
 
 interface IAxisProps {
+  origin: THREE.Vector3;
   axis: THREE.Vector3;
+  ortho: THREE.Vector3;
   color: THREE.Color;
   scale: number;
 }
 
-const Axis = ({ axis, scale, color }: IAxisProps) => {
-  const [selected, setSelected] = React.useState(false);
+const Axis = ({ origin, axis, ortho, scale, color }: IAxisProps) => {
+  const [isHovering, setIsHovering] = React.useState(false);
+  const [dragStartVector, setDragStartVector] =
+    React.useState<THREE.Vector2 | null>(null);
 
-  const { raycaster } = useEditorPreviewContext();
+  const { raycaster, setIsDragging, camera } = useEditorPreviewContext();
 
   const lineRef: React.MutableRefObject<Line2 | null> = React.useRef(null);
 
@@ -28,27 +32,62 @@ const Axis = ({ axis, scale, color }: IAxisProps) => {
     [axis, scale]
   );
 
-  const onMouseDown = React.useCallback((event: MouseEvent): void => {}, []);
+  const onMouseDown = React.useCallback(
+    (event: MouseEvent): void => {
+      if (isHovering) {
+        setDragStartVector(new THREE.Vector2(event.clientX, event.clientY));
+        setIsDragging(true);
+      }
+    },
+    [isHovering]
+  );
 
-  const onMouseUp = React.useCallback((event: MouseEvent): void => {}, []);
+  const onMouseUp = React.useCallback(
+    (event: MouseEvent): void => {
+      if (dragStartVector === null) {
+        return;
+      }
+
+      console.log("a");
+
+      setDragStartVector(null);
+      setIsDragging(false);
+    },
+    [dragStartVector, setDragStartVector]
+  );
 
   const onMouseMove = React.useCallback(
     (event: MouseEvent): void => {
+      // Check if the line reference is set.
       if (!lineRef.current) {
         return;
       }
 
-      const intersections = raycaster.intersectObject(lineRef.current, false);
+      if (dragStartVector == null) {
+        const intersecting =
+          raycaster.intersectObject(lineRef.current, false).length > 0;
 
-      const shouldBeSelected = intersections.length > 0;
+        if (intersecting && !isHovering) {
+          setIsHovering(true);
+        } else if (!intersecting && isHovering) {
+          setIsHovering(false);
+        }
+      } else {
+        if (!camera.current) {
+          return;
+        }
 
-      if (shouldBeSelected && !selected) {
-        setSelected(true);
-      } else if (!shouldBeSelected && selected) {
-        setSelected(false);
+        // Create the a new ray in the direction of the axis.
+        const ray = new THREE.Ray(origin, axis);
+        const closestPointOnRay = ray.closestPointToPoint(camera.current.position, new THREE.Vector3());
+        const planeNormal = camera.current.position.clone().sub(closestPointOnRay).normalize();
+        const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal, origin);
+
+        const intersect =  raycaster.ray.intersectPlane(plane, new THREE.Vector3());
+        console.log(intersect);
       }
     },
-    [selected, setSelected, lineRef, raycaster]
+    [isHovering, setIsHovering, lineRef, raycaster, dragStartVector, origin, camera]
   );
 
   // Add event listeners for mouse events (mousedown, mouseup, mousemove) when the component mounts.
@@ -63,17 +102,20 @@ const Axis = ({ axis, scale, color }: IAxisProps) => {
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("mousemove", onMouseMove);
     };
-  }, []);
+  }, [onMouseDown, onMouseUp, onMouseMove]);
 
   return (
-    <Line
-      ref={lineRef}
-      points={points}
-      color={color}
-      opacity={selected ? 1.0 : 0.7}
-      transparent={true}
-      lineWidth={2}
-    />
+    <>
+      <Line
+      position={origin}
+        ref={lineRef}
+        points={points}
+        color={color}
+        opacity={isHovering ? 1.0 : 0.7}
+        transparent={true}
+        lineWidth={2}
+      />
+    </>
   );
 };
 
@@ -94,11 +136,15 @@ export const MyEditorPreviewTranslateEndEffectorTool = ({
   const yAxis = React.useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const zAxis = React.useMemo(() => new THREE.Vector3(0, 0, 1), []);
 
+  const xAxisOrtho = React.useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const yAxisOrtho = React.useMemo(() => new THREE.Vector3(1, 0, 0), []);
+  const zAxisOrtho = React.useMemo(() => new THREE.Vector3(0, 1, 0), []);
+
   return (
-    <group position={position}>
-      <Axis axis={xAxis} scale={scale} color={xAxisColor} />
-      <Axis axis={yAxis} scale={scale} color={yAxisColor} />
-      <Axis axis={zAxis} scale={scale} color={zAxisColor} />
+    <group>
+      <Axis origin={position} axis={xAxis} ortho={xAxisOrtho} scale={scale} color={xAxisColor} />
+      <Axis origin={position} axis={yAxis} ortho={yAxisOrtho} scale={scale} color={yAxisColor} />
+      <Axis origin={position} axis={zAxis} ortho={zAxisOrtho} scale={scale} color={zAxisColor} />
     </group>
   );
 };
