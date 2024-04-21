@@ -1,10 +1,8 @@
-import { Editor } from "./components/Editor";
-
-import "./App.css";
+import { MyEditor } from "./components/MyEditor";
 
 function App() {
   return (
-    <Editor />
+    <MyEditor />
   );
 }
 
