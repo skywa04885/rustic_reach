@@ -6,6 +6,7 @@ use memory::{
     led_on_l_addr, MODE1_ADDR, MODE1_ALLCALL_BIT, MODE1_RESTART_BIT, MODE1_SLEEP_BIT,
     PRE_SCALE_ADDR,
 };
+use rppal::gpio::{Level, OutputPin};
 use thiserror::Error;
 use tokio::{sync::Mutex, time::sleep};
 
@@ -30,6 +31,7 @@ pub enum Error {
 /// Builder for creating a `Driver` instance with custom configuration.
 pub struct DriverBuilder {
     device: Device,
+    oe: OutputPin,
     osc_clock: u32,
     update_rate: u16,
 }
@@ -40,17 +42,20 @@ impl DriverBuilder {
     /// # Arguments
     ///
     /// * `device` - The `Device` instance used for communication with the PCA9685 device.
+    /// * `oe` - The `OutputPin` instance used for controlling the Output Enable pin of the PCA9685 device.
     ///
     /// # Returns
     ///
     /// A new instance of the `DriverBuilder` struct with default values for the oscillator clock (50,000,000) and update rate (50).
-    pub fn new(device: Device) -> Self {
+    pub fn new(device: Device, oe: OutputPin) -> Self {
         Self {
             device,
+            oe,
             osc_clock: 50_000_000_u32,
             update_rate: 50_u16,
         }
     }
+
     /// Sets the oscillator clock value for the `DriverBuilder`.
     ///
     /// This function allows you to customize the oscillator clock value used by the `DriverBuilder`.
@@ -96,6 +101,9 @@ impl DriverBuilder {
     /// Returns a `Result` containing the `Driver` instance if the build operation is successful,
     /// otherwise returns an `Error`.
     pub fn build(mut self) -> Result<Driver, Error> {
+        // Write high to oe.
+        self.oe.write(Level::High);
+
         // Do not listen to "LED All Calls".
         self.device.clear_bit_mask(MODE1_ADDR, MODE1_ALLCALL_BIT)?;
 
@@ -133,12 +141,13 @@ impl Driver {
     /// # Arguments
     ///
     /// * `device` - The `Device` instance used for communication with the PCA9685 device.
+    /// * `oe` - The `OutputPin` instance used for controlling the Output Enable pin of the PCA9685 device.
     ///
     /// # Returns
     ///
     /// A new instance of the `DriverBuilder` struct.
-    pub fn builder(device: Device) -> DriverBuilder {
-        DriverBuilder::new(device)
+    pub fn builder(device: Device, oe: OutputPin) -> DriverBuilder {
+        DriverBuilder::new(device, oe)
     }
 
     /// Puts the PCA9685 device into sleep mode.

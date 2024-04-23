@@ -1,4 +1,10 @@
+use std::sync::Arc;
+
+use pca9685::{device::Device, Channel, Driver};
+use pca9685_servo::{Servo, ServoSettings};
 use pose::MyArmService;
+use rppal::{gpio::Gpio, i2c::I2c};
+use tokio::sync::Mutex;
 
 pub(crate) mod pose;
 
@@ -6,8 +12,8 @@ pub(crate) mod pose;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let my_arm_service = MyArmService {};
 
-    Ok(())
-    /*
+    let gpio = Gpio::new().unwrap();
+    
     let mut i2c = I2c::new().unwrap();
     i2c.set_slave_address(0b100_0000).unwrap();
 
@@ -16,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     device.software_reset().await.unwrap();
 
     // Create the driver and set the oscillator clock frequency and update rate.
-    let mut driver = Driver::builder(device)
+    let mut driver = Driver::builder(device, gpio.get(17).unwrap().into_output())
         .with_osc_clock(25_000_000)
         .with_update_rate(50)
         .build()
@@ -32,5 +38,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let servo_settings = ServoSettings::new();
     let mut servo = Servo::new(Channel::new(driver, 0_u8), servo_settings, 0_f64);
     servo.write_with_speed(120.0, 60.0).await.unwrap();
-     */
+
+    Ok(())
 }
