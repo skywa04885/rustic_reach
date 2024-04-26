@@ -111,7 +111,7 @@ impl Device {
         self.i2c.set_slave_address(self.address)?;
 
         // Wait for the reset to complete.
-        sleep(std::time::Duration::from_millis(1)).await;
+        sleep(std::time::Duration::from_millis(100)).await;
 
         // Return success.
         Ok(())

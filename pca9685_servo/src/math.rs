@@ -1,3 +1,7 @@
+pub fn map(x: f64, in_min: f64, in_max: f64, out_min: f64, out_max: f64) -> f64 {
+    (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+}
+
 /// Computes the duty cycle based on the start and end duty cycles, start and end angles, and the current angle.
 ///
 /// # Arguments
@@ -18,7 +22,7 @@ pub(crate) fn compute_duty_cycle(
     end_angle: f64,
     angle: f64,
 ) -> f64 {
-    start_duty_cycle + (end_duty_cycle - start_duty_cycle) * (angle / (end_angle - start_angle))
+    map(angle, start_angle, end_angle, start_duty_cycle, end_duty_cycle)
 }
 
 #[cfg(test)]
