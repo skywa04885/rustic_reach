@@ -1,4 +1,5 @@
 import {
+  CircleOutlined,
   ControlCamera,
   GridOn,
   ThreeSixty,
@@ -46,6 +47,12 @@ export const MyEditorToolbarEditorMode = () => {
       <Tooltip title={"Orient end-effector"}>
         <ToggleButton value={EditorMode.OrientEndEffector}>
           <ThreeSixty />
+        </ToggleButton>
+      </Tooltip>
+      {/* Trace circle */}
+      <Tooltip title={"Trace circle"}>
+        <ToggleButton value={EditorMode.CircleTracer}>
+          <CircleOutlined />
         </ToggleButton>
       </Tooltip>
     </ToggleButtonGroup>

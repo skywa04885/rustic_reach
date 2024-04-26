@@ -1,12 +1,13 @@
 import { createContext, useContext, useState } from "react";
 import { MyEditorPreview } from "./MyEditor/MyEditorPreview";
 import { MyEditorToolbar } from "./MyEditor/MyEditorToolbar";
-import { Stack } from "@mui/material";
+import { Grid, Stack } from "@mui/material";
 import { MyEditorTabs } from "./MyEditor/MyEditorTabs";
 
 export enum EditorMode {
   TranslateEndEffector = "TranslateEndEffector",
   OrientEndEffector = "OrientEndEffector",
+  CircleTracer = "CircleTracer",
 }
 
 export enum EditorPreviewOption {
@@ -52,11 +53,19 @@ export const MyEditor = () => {
         setPreviewOptions,
       }}
     >
-      <Stack direction={"column"} height={"100vh"}>
-        <MyEditorTabs />
-        <MyEditorPreview />
-        <MyEditorToolbar />
-      </Stack>
+      <Grid container={true} height={"100vh"} width={"100vw"}>
+        <Grid item={true} xs={4}>
+          <Stack direction={"column"} height={"100%"}>
+            <MyEditorTabs />
+          </Stack>
+        </Grid>
+        <Grid item={true} xs={8}>
+          <Stack direction={"column"} height={"100%"}>
+            <MyEditorPreview />
+            <MyEditorToolbar />
+          </Stack>
+        </Grid>
+      </Grid>
     </EditorContext.Provider>
   );
 };
