@@ -1,4 +1,5 @@
 pub(crate) const MODE1_ADDR: u8 = 0x00_u8;
+pub(crate) const MODE2_ADDR: u8 = 0x01_u8;
 pub(crate) const LED_BASE_ADDR: u8 = 0x06_u8;
 pub(crate) const PRE_SCALE_ADDR: u8 = 0xFE_u8;
 
@@ -7,8 +8,11 @@ pub(crate) const LED_BASE_OFFSET_MULTIPLIER: u8 = 0x04_u8;
 pub(crate) const LED_ON_L_BASE_OFFSET: u8 = 0x00_u8;
 
 pub(crate) const MODE1_RESTART_BIT: u8 = 1_u8 << 7_u8;
+pub(crate) const MODE1_AI_BIT: u8 = 1_u8 << 5_u8;
 pub(crate) const MODE1_SLEEP_BIT: u8 = 1_u8 << 4_u8;
-pub(crate) const MODE1_ALLCALL_BIT: u8 = 0_u8 << 4_u8;
+pub(crate) const MODE1_ALLCALL_BIT: u8 = 1_u8 << 0_u8;
+
+pub(crate) const MODE2_IVRT_BIT: u8 = 1_u8 << 4_u8;
 
 /// Computes the base address of the LED register for the given channel.
 ///

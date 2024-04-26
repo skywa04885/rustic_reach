@@ -3,11 +3,13 @@ use std::{sync::Arc, time::Duration};
 use device::Device;
 use math::{compute_on_off_time, compute_prescale};
 use memory::{
-    led_on_l_addr, MODE1_ADDR, MODE1_ALLCALL_BIT, MODE1_RESTART_BIT, MODE1_SLEEP_BIT,
-    PRE_SCALE_ADDR,
+    led_on_l_addr, MODE1_ADDR, MODE1_ALLCALL_BIT, MODE1_RESTART_BIT, MODE1_SLEEP_BIT, MODE2_ADDR, MODE2_IVRT_BIT, PRE_SCALE_ADDR
 };
+use rppal::gpio::{Level, OutputPin};
 use thiserror::Error;
 use tokio::{sync::Mutex, time::sleep};
+
+use crate::memory::MODE1_AI_BIT;
 
 pub mod device;
 pub(crate) mod math;
@@ -30,6 +32,7 @@ pub enum Error {
 /// Builder for creating a `Driver` instance with custom configuration.
 pub struct DriverBuilder {
     device: Device,
+    oe: OutputPin,
     osc_clock: u32,
     update_rate: u16,
 }
@@ -40,17 +43,20 @@ impl DriverBuilder {
     /// # Arguments
     ///
     /// * `device` - The `Device` instance used for communication with the PCA9685 device.
+    /// * `oe` - The `OutputPin` instance used for controlling the Output Enable pin of the PCA9685 device.
     ///
     /// # Returns
     ///
     /// A new instance of the `DriverBuilder` struct with default values for the oscillator clock (50,000,000) and update rate (50).
-    pub fn new(device: Device) -> Self {
+    pub fn new(device: Device, oe: OutputPin) -> Self {
         Self {
             device,
+            oe,
             osc_clock: 50_000_000_u32,
             update_rate: 50_u16,
         }
     }
+
     /// Sets the oscillator clock value for the `DriverBuilder`.
     ///
     /// This function allows you to customize the oscillator clock value used by the `DriverBuilder`.
@@ -96,8 +102,17 @@ impl DriverBuilder {
     /// Returns a `Result` containing the `Driver` instance if the build operation is successful,
     /// otherwise returns an `Error`.
     pub fn build(mut self) -> Result<Driver, Error> {
+        // Write high to oe.
+        self.oe.set_low();
+
         // Do not listen to "LED All Calls".
         self.device.clear_bit_mask(MODE1_ADDR, MODE1_ALLCALL_BIT)?;
+
+        // Set the auto increment bit.
+        self.device.set_bit_mask(MODE1_ADDR, MODE1_AI_BIT)?;
+
+        // Set thge invert bit.
+        // self.device.set_bit_mask(MODE2_ADDR, MODE2_IVRT_BIT)?;
 
         // Compute the prescale value.
         let prescale: u8 = compute_prescale(self.osc_clock, self.update_rate)?;
@@ -133,12 +148,13 @@ impl Driver {
     /// # Arguments
     ///
     /// * `device` - The `Device` instance used for communication with the PCA9685 device.
+    /// * `oe` - The `OutputPin` instance used for controlling the Output Enable pin of the PCA9685 device.
     ///
     /// # Returns
     ///
     /// A new instance of the `DriverBuilder` struct.
-    pub fn builder(device: Device) -> DriverBuilder {
-        DriverBuilder::new(device)
+    pub fn builder(device: Device, oe: OutputPin) -> DriverBuilder {
+        DriverBuilder::new(device, oe)
     }
 
     /// Puts the PCA9685 device into sleep mode.
@@ -225,11 +241,13 @@ impl Driver {
         // Get the base address of the registers for the given channel.
         let address: u8 = led_on_l_addr(channel);
 
-        // Split the on value into two bytes.
+        println!("{}, {}, {}, {:#x}", channel, on, off, address);
+
+        // // Split the on value into two bytes.
         let on_l_val: u8 = ((on & 0x00FF_u16) >> 0_u16) as u8;
         let on_h_val: u8 = ((on & 0xFF00_u16) >> 8_u16) as u8;
 
-        // Split the off value into two bytes.
+        // // Split the off value into two bytes.
         let off_l_val: u8 = ((off & 0x00FF_u16) >> 0_u16) as u8;
         let off_h_val: u8 = ((off & 0xFF00_u16) >> 8_u16) as u8;
 
@@ -258,6 +276,8 @@ impl Driver {
     ///
     /// Returns `Ok(())` if the write operation is successful, otherwise returns an `Error`.
     pub fn write_channel_duty_cycle(&mut self, channel: u8, duty_cycle: f64) -> Result<(), Error> {
+        println!("Duty cycle: {}", duty_cycle);
+        
         // Compute the on and off values based on the duty cycle.
         let (on, off) = compute_on_off_time(duty_cycle)?;
 

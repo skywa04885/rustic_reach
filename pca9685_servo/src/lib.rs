@@ -12,6 +12,58 @@ pub enum Error {
     PCA9685Error(#[from] pca9685::Error),
 }
 
+pub struct ServoSettingsProfiles;
+
+impl ServoSettingsProfiles {
+    pub fn s06nf_01() -> ServoSettings {
+        ServoSettings::new()
+            .with_start_angle(-90_f64)
+            .with_end_angle(90_f64)
+            .with_start_duty_cycle(0.033_f64)
+            .with_end_duty_cycle(0.127_f64)
+    }
+
+    pub fn s06nf_02() -> ServoSettings {
+        ServoSettings::new()
+            .with_start_angle(-90_f64)
+            .with_end_angle(90_f64)
+            .with_start_duty_cycle(0.021_f64)
+            .with_end_duty_cycle(0.127_f64)
+    }
+
+    pub fn s06nf_03() -> ServoSettings {
+        ServoSettings::new()
+            .with_start_angle(-90_f64)
+            .with_end_angle(90_f64)
+            .with_start_duty_cycle(0.028_f64)
+            .with_end_duty_cycle(0.127_f64)
+    }
+
+    pub fn s06nf_04() -> ServoSettings {
+        ServoSettings::new()
+            .with_start_angle(-90_f64)
+            .with_end_angle(90_f64)
+            .with_start_duty_cycle(0.024_f64)
+            .with_end_duty_cycle(0.128_f64)
+    }
+
+    pub fn s06nf_05() -> ServoSettings {
+        ServoSettings::new()
+            .with_start_angle(-90_f64)
+            .with_end_angle(90_f64)
+            .with_start_duty_cycle(0.026_f64)
+            .with_end_duty_cycle(0.104_f64)
+    }
+
+    pub fn s06nf_06() -> ServoSettings {
+        ServoSettings::new()
+            .with_start_angle(-90_f64)
+            .with_end_angle(90_f64)
+            .with_start_duty_cycle(0.026_f64)
+            .with_end_duty_cycle(0.104_f64)
+    }
+}
+
 /// Represents the settings for a servo.
 pub struct ServoSettings {
     /// The starting angle of the servo.
@@ -25,10 +77,10 @@ pub struct ServoSettings {
 }
 
 impl ServoSettings {
-    pub const DEFAULT_START_ANGLE: f64 = 0_f64;
-    pub const DEFAULT_END_ANGLE: f64 = 180_f64;
-    pub const DEFAULT_START_DUTY_CYCLE: f64 = 0.05_f64;
-    pub const DEFAULT_END_DUTY_CYCLE: f64 = 0.1_f64;
+    pub const DEFAULT_START_ANGLE: f64 = -90_f64;
+    pub const DEFAULT_END_ANGLE: f64 = 90_f64;
+    pub const DEFAULT_START_DUTY_CYCLE: f64 = 0.025_f64;
+    pub const DEFAULT_END_DUTY_CYCLE: f64 = 0.125_f64;
 
     /// Creates a new `ServoSettings` instance with default values.
     ///
@@ -192,10 +244,15 @@ impl Servo {
 
         // Perform the iterations to reach the desired angle.
         for i in 0..iterations {
-            let current_angle = i as f64 * step_size + start_angle;
+            let current_angle = if angle > start_angle {
+                start_angle + i as f64 * step_size
+            } else {
+                start_angle - i as f64 * step_size
+            };
             self.write(current_angle).await?;
             sleep(sleep_duration).await;
         }
+
 
         // Return success.
         Ok(())
@@ -234,6 +291,9 @@ impl Servo {
 
         // Write the duty cycle to the channel.
         self.channel.write_duty_cycle(duty_cycle).await?;
+
+        // Set the current angle.
+        self.angle = angle;
 
         // Return success.
         Ok(())

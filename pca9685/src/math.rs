@@ -47,17 +47,13 @@ pub(crate) fn compute_prescale(osc_clock: u32, update_rate: u16) -> Result<u8, E
 /// # Returns
 ///
 /// The on time for the PWM signal, represented as a 16-bit unsigned integer.
-pub(crate) fn compute_on_off_time(duty_cycle: f64) -> Result<(u16, u16), Error> {
-    // Check if the duty cycle is outside the bounds of 0.0 to 1.0.
-    if duty_cycle < 0.0 || duty_cycle > 1.0 {
-        // Return an error with a custom error message.
-        return Err(Error::DutyCycleOutOfBounds(duty_cycle));
-    }
+pub(crate) fn compute_on_off_time(mut duty_cycle: f64) -> Result<(u16, u16), Error> {
+    // Clamp the duty cycle.
+    duty_cycle = duty_cycle.clamp(0.0, 1.0);
 
-    // Calculate the on time based on the duty cycle.
-    let on_time = (duty_cycle * 4095_f64).round() as u16;
-    // Calculate the off time as the difference between the maximum value (4095) and the on time.
-    let off_time = 4095_u16 - on_time;
+    // Calculate the on and off time values.
+    let on_time = 0_u16;
+    let off_time = (duty_cycle * 4095_f64).round() as u16;
 
     // Return the on time and off time as a tuple.
     Ok((on_time, off_time))
