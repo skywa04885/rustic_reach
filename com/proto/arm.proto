@@ -1,38 +1,51 @@
 syntax = "proto3";
 
+// Define the package for the protocol buffer messages
 package proto;
 
-message Pose {
-    double theta_0 = 10;
-    double theta_1 = 20;
-    double theta_2 = 30;
-    double theta_3 = 40;
-    double theta_4 = 50;
+// Define the message for representing a pose in the RPC
+message RpcPose {
+    double angle0 = 1; // The angle of joint 0
+    double angle1 = 2; // The angle of joint 1
+    double angle2 = 3; // The angle of joint 2
+    double angle3 = 4; // The angle of joint 3
+    double angle4 = 5; // The angle of joint 4
+    double angle5 = 6; // The angle of joint 5
 }
 
-message Movement {
-    Pose pose = 10;
-    double duration = 20;    
+// Define the message for representing a pose change in the RPC
+message RpcPoseChange {
+    RpcPose newPose = 1; // The new pose
+    double duration = 2; // The duration of the pose change
 }
 
-message MovePoseRequest {
-    Movement movement = 10;
+// Define the message for requesting a pose change in the RPC
+message RpcPoseChangeRequest {
+    RpcPoseChange poseChange = 1; // The pose change to be requested
 }
 
-message MovePoseResponse {
+// Define the message for the response to a pose change request in the RPC
+message RpcPoseChangeResponse {}
 
+// Define the message for requesting multiple pose changes in the RPC
+message RpcMultiPoseChangeRequest {
+    repeated RpcPoseChange poseChanges = 1; // The list of pose changes to be requested
 }
 
-message PoseStreamRequest {
+// Define the message for the response to a multiple pose change request in the RPC
+message RpcMultiPoseChangeResponse {}
 
-}
+// Define the message for requesting a pose stream in the RPC
+message RpcPoseStreamRequest {}
 
-message PoseStreamResponse {
-    Pose pose = 10;
-}
+// Define the service for the RPC API of the servo driver
+service RpcServoDriverApi {
+    // RPC method for changing a pose
+    rpc ChangePose(RpcPoseChangeRequest) returns (RpcPoseChangeResponse);
 
-service ArmService {
-    rpc MovePose(MovePoseRequest) returns (MovePoseResponse);
+    // RPC method for changing multiple poses
+    rpc MultiChangePose(RpcMultiPoseChangeRequest) returns (RpcMultiPoseChangeResponse);
 
-    rpc PoseStream(PoseStreamRequest) returns (stream PoseStreamResponse);
+    // RPC method for streaming poses
+    rpc PoseStream(RpcPoseStreamRequest) returns (stream RpcPose);
 }
