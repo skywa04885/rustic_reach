@@ -153,7 +153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         .add_service(servo_writer_api_server)
-        .serve("[::1]:50051".parse()?)
+        .serve("0.0.0.0:50051".parse()?)
         .await?;
 
     Ok(())
