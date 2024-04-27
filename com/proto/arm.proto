@@ -39,13 +39,15 @@ message RpcMultiPoseChangeResponse {}
 message RpcPoseStreamRequest {}
 
 // Define the service for the RPC API of the servo driver
-service RpcServoDriverApi {
+service RpcServoWriterApi {
     // RPC method for changing a pose
     rpc ChangePose(RpcPoseChangeRequest) returns (RpcPoseChangeResponse);
 
     // RPC method for changing multiple poses
     rpc MultiChangePose(RpcMultiPoseChangeRequest) returns (RpcMultiPoseChangeResponse);
+}
 
+service RpcServoReaderApi {
     // RPC method for streaming poses
     rpc PoseStream(RpcPoseStreamRequest) returns (stream RpcPose);
 }
